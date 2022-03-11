@@ -1,13 +1,13 @@
 import os
 import json
-import events
+import toll_bot
 from db_manager import SQLiteDatabaseAccess
 from pathlib import Path
 from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify
 from slackeventsapi import SlackEventAdapter
-from lib.user import User
+from lib.user import UserManager
 from slack_api import SlackClient
 
 env_path = Path('.') / '.env'
@@ -22,15 +22,15 @@ slack_event_adapter = SlackEventAdapter(SLACKBOT_SIGNING_SECRET, '/slack/events'
 slack_client = SlackClient(bot_token=SLACKBOT_TOKEN, signing_secret=SLACKBOT_SIGNING_SECRET)
 
 db = SQLiteDatabaseAccess('test.db')
+user_manager = UserManager(db)
 
 @slack_event_adapter.on('app_home_opened')
 def app_home_opened(payload):
     """User clicked the home tab"""
     event = payload.get('event', {})
     user_id = event.get('user')
-    user = User(user_id=user_id)
-
-    slack_client.publish_home(user)          
+    user = user_manager.new_user(user_id=user_id)
+    slack_client.publish_home(user)
 
 @app.route('/actions', methods=['POST'])
 def slack_action_entry():
@@ -40,9 +40,9 @@ def slack_action_entry():
         return jsonify(text="Invalid request")
 
     payload = json.loads(request.form['payload'])
-    print(payload)
-    response = events.process_action(payload)
-    return jsonify(response)
+
+    toll_bot.process_action(payload)
+    return {}#jsonify(response)
 
 def main():
     """Start the bot"""

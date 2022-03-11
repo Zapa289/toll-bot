@@ -1,5 +1,4 @@
 import json
-import lib.slack_repo as sr
 from lib.user import User
 from datetime import date
 
@@ -60,9 +59,9 @@ def get_home_tab(user: User) -> str:
 
 def get_dates(user: User) -> list:
     """Get all the slack blocks for different """
-    dates: list[str] = []
+    date_blocks: list[str] = []
 
-    for date in user.dates_tracked:
+    for date in user.dates:
         block = \
         {
             "type": "section",
@@ -92,10 +91,10 @@ def get_dates(user: User) -> list:
                 ]
             }
         }
-        dates.append(block)
+        date_blocks.append(block)
 
-    if not dates:
-        dates = \
+    if not date_blocks:
+        date_blocks = \
         {
 			"type": "context",
 			"elements": [
@@ -106,7 +105,7 @@ def get_dates(user: User) -> list:
 				}
 			]
 		}
-    return dates
+    return date_blocks
 
 #
 # Modals
