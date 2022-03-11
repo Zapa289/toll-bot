@@ -1,48 +1,37 @@
-import os
-import json
-import toll_bot
+import settings
+from toll_bot import TollBot
 from db_manager import SQLiteDatabaseAccess
-from pathlib import Path
-from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify
-from slackeventsapi import SlackEventAdapter
-from lib.user import UserManager
-from slack_api import SlackClient
-
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=env_path)
-
-SLACKBOT_TOKEN = os.getenv('SLACKBOT_TOKEN')
-SLACKBOT_SIGNING_SECRET = os.getenv('SLACKBOT_SIGNING_SECRET')
+from slack_bolt import App, Say
+from slack_bolt.adapter.flask import SlackRequestHandler
+from slack_sdk import WebClient
 
 app = Flask(__name__)
-slack_event_adapter = SlackEventAdapter(SLACKBOT_SIGNING_SECRET, '/slack/events', app)
 
-slack_client = SlackClient(bot_token=SLACKBOT_TOKEN, signing_secret=SLACKBOT_SIGNING_SECRET)
+bolt_app = App(token=settings.SLACKBOT_TOKEN, signing_secret=settings.SLACKBOT_SIGNING_SECRET)
 
-db = SQLiteDatabaseAccess('test.db')
-user_manager = UserManager(db)
+bot = TollBot(SQLiteDatabaseAccess('test.db'))
 
-@slack_event_adapter.on('app_home_opened')
-def app_home_opened(payload):
+@bolt_app.event('app_home_opened')
+def app_home_opened(client: WebClient, event, logger):
     """User clicked the home tab"""
-    event = payload.get('event', {})
+
     user_id = event.get('user')
-    user = user_manager.new_user(user_id=user_id)
-    slack_client.publish_home(user)
+    home_tab = bot.home_tab(user_id)
+    client.views_publish(user_id=user_id, view=home_tab)
 
-@app.route('/actions', methods=['POST'])
-def slack_action_entry():
-    """Handles all actions from users"""
+@bolt_app.action('addDate')
+def add_date(payload: dict, say: Say):
+    date = None
+    bot.add_date(payload['user'], date)
 
-    if not slack_client.is_valid_request(request):
-        return jsonify(text="Invalid request")
+handler = SlackRequestHandler(bolt_app)
 
-    payload = json.loads(request.form['payload'])
-
-    toll_bot.process_action(payload)
-    return {}#jsonify(response)
+@app.route("/slack/events", methods=["POST"])
+def slack_events():
+    """ Declaring the route where slack will post a request and dispatch method of App """
+    return handler.handle(request)
 
 def main():
     """Start the bot"""

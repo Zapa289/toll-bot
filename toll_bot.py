@@ -1,20 +1,17 @@
-"""First step: Get a bot running to track days in the office"""
+import home
+from lib.user import UserManager
+from db_manager import DatabaseAccess
 
-def process_action(payload):
-    actions = payload['actions']
+class TollBot: 
+    def __init__(self, database: DatabaseAccess):
+        self.db = database
+        self.user_manager = UserManager(self.db)
 
-    for action in actions:
-        action_id = action['action_id']
-        if action_id in ACTIONS:
-            ACTIONS[action_id](action)
+    def home_tab(self, user_id):
+        user = self.user_manager.new_user(user_id=user_id)
+        return home.get_home_tab(user)
 
-def add_date(action):
-    print("Let's add a new date...")
-
-OK_RESPONSE = {
-    "ok" : True
-}
-
-ACTIONS = {
-    "addDate" : add_date
-}
+    def add_date(self, user_id, date):
+        print("Let's add a new date...")
+        user = self.user_manager.new_user(user_id)
+        self.user_manager.add_date(user, date)
