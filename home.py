@@ -1,16 +1,14 @@
 import settings
 from lib.user import User
-from datetime import date
+from datetime import datetime
 from slack_sdk.models.views import View
 from slack_sdk.models.blocks.blocks import Block, SectionBlock, ActionsBlock, DividerBlock, HeaderBlock, ContextBlock
 from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement
 from slack_sdk.models.blocks.basic_components import Option, PlainTextObject
 
 def make_home_blocks(user: User) -> list[Block]:
-    today = date.today().strftime(settings.DATE_FORMAT)
-    home_blocks: list[Block] = []
-
-    home_blocks.extend([
+    today = datetime.today().strftime(settings.DATE_FORMAT)
+    home_blocks: list[Block] = [
         SectionBlock(type="section", text={"type": "mrkdwn", "text": f"*{today}*"}),
         ActionsBlock(block_id="DateBlock", elements=[
             DatePickerElement(action_id="DatePicker", placeholder="Use today's date"),
@@ -18,7 +16,8 @@ def make_home_blocks(user: User) -> list[Block]:
         ]),
         DividerBlock(),
         HeaderBlock(text="Dates in the office")
-    ])
+    ]
+    
     home_blocks.extend(get_dates(user))
 
     return home_blocks
@@ -38,8 +37,9 @@ def get_dates(user: User) -> list[Block]:
     date_blocks: list[Block] = []
 
     for num, date in enumerate(user.dates):
+        date_text = datetime.strptime(date, settings.RAW_DATE_FORMAT).strftime(settings.DATE_FORMAT)
         date_blocks.append(
-            SectionBlock(block_id=f"date_{num}", text=date,
+            SectionBlock(block_id=f"date_{num}", text=date_text,
                 accessory=OverflowMenuElement(action_id=f"date_menu_{num}", options=[
                     Option(label="Remove date", value="remove_date"),
                     Option(label="Another thing to do", value="another_thing")

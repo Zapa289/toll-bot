@@ -34,10 +34,7 @@ def add_date(ack, client: WebClient, context, body):
     # Find the current state of the datepicker
     date_raw = body['view']['state']['values']['DateBlock']['DatePicker']['selected_date']
     # None means datepicker has been left as default, use today's date
-    if not date_raw:
-        date = datetime.today().strftime(settings.DATE_FORMAT)
-    else:
-        date = datetime.strptime(date_raw, "%Y-%m-%d").strftime(settings.DATE_FORMAT)
+    date = date_raw if date_raw else datetime.today().strftime(settings.RAW_DATE_FORMAT)
 
     user_id = context['user_id']
     bot.add_date(user_id, date)
