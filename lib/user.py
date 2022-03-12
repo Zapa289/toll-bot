@@ -1,11 +1,13 @@
+import settings
 from db_manager import DatabaseAccess
 from datetime import datetime
 
 def valid_date(date: str) -> bool:
     """Verifies date strings are correct format"""
+
     try:
-        datetime.strptime(date, '%B %d, %Y')
-    except ValueError:
+        datetime.strptime(date, settings.DATE_FORMAT)
+    except (ValueError, TypeError):
         print(f"Invalid date \"{date}\", check date formatting")
         return False
     return True
@@ -37,12 +39,13 @@ class User:
                 raise ValueError(date=date)
         self._dates = date_list
 
-
-    def add_date(self, date: str) -> list[str]:
+    def add_date(self, date: str):
         if not valid_date(date):
             raise ValueError(date=date)
-
         self._dates.append(date)
+
+    def delete_date(self, date: str):
+        self._dates.remove(date)
 
     def __repr__(self):
         return f"User ID {self.id}, dates: {self.dates}"
@@ -51,7 +54,7 @@ class UserManager:
     def __init__(self, db: DatabaseAccess) -> None:
         self.db = db
 
-    def new_user(self, user_id) -> User:
+    def get_user(self, user_id) -> User:
         user = User(user_id)
         try:
             user.dates = self.db.get_user_dates(user.id)
@@ -65,6 +68,15 @@ class UserManager:
         except ValueError:
             print(f"Unable to add date \"{date}\" to user \"{user.id}\"")
             return
-
         # Only modify the database if we are working with a valid date
         self.db.add_date(user.id, date)
+
+    def delete_date(self, user: User, date: str):
+        try:
+            user.delete_date(date)
+        except ValueError:
+            print(f"Unable to delete date \"{date}\" from user \"{user.id}\"")
+            return
+
+        # Only modify the database if we are working with a valid date
+        self.db.delete_date(user.id, date)
