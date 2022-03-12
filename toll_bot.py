@@ -1,22 +1,43 @@
 import home
-from lib.user import UserManager
+from lib.user import User
 from db_manager import DatabaseAccess
 
 class TollBot:
     def __init__(self, database: DatabaseAccess):
         self.db = database
-        self.user_manager = UserManager(self.db)
 
     def home_tab(self, user_id):
-        user = self.user_manager.get_user(user_id=user_id)
+        user = self.get_user(user_id=user_id)
         return home.get_home_tab(user)
 
-    def add_date(self, user_id, date):
-        print("Let's add a new date...")
-        user = self.user_manager.get_user(user_id)
-        self.user_manager.add_date(user, date)
+    def get_user(self, user_id) -> User:
+        user = User(user_id)
+        try:
+            user.dates = self.db.get_user_dates(user.id)
+        except ValueError as e:
+            print(f"Invalid date seen in database for user \"{user.id}\": {e['date']}")
+        return user
 
-    def delete_date(self, user_id, date):
+    def add_user_date(self, user_id, date):
+        print("Let's add a new date...")
+        user = self.get_user(user_id)
+        try:
+            user.add_date(date)
+        except ValueError:
+            print(f"Unable to add date \"{date}\" to user \"{user.id}\"")
+            return user
+        # Only modify the database if we are working with a valid date
+        self.db.add_date(user.id, date)
+        return user
+
+    def delete_user_date(self, user_id, date):
         print("Let's delete a date...")
-        user = self.user_manager.get_user(user_id)
-        self.user_manager.delete_date(user, date)
+        user = self.get_user(user_id)
+        try:
+            user.delete_date(date)
+        except ValueError:
+            print(f"Unable to delete date \"{date}\" from user \"{user.id}\"")
+            return user
+        # Only modify the database if we are working with a valid date
+        self.db.delete_date(user.id, date)
+        return user

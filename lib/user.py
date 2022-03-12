@@ -49,40 +49,9 @@ class User:
         self._dates.append(date)
 
     def delete_date(self, date: str):
+        if not valid_date(date):
+            raise ValueError(date=date)
         self._dates.remove(date)
 
     def __repr__(self):
         return f"User ID {self.id}, dates: {self.dates}"
-
-class UserManager:
-    def __init__(self, db: DatabaseAccess) -> None:
-        self.db = db
-
-    def get_user(self, user_id) -> User:
-        user = User(user_id)
-        try:
-            user.dates = self.db.get_user_dates(user.id)
-        except ValueError as e:
-            print(f"Invalid date seen in database for user \"{user.id}\": {e['date']}")
-        return user
-
-    def add_date(self, user: User, date: str) -> User:
-        try:
-            user.add_date(date)
-        except ValueError:
-            print(f"Unable to add date \"{date}\" to user \"{user.id}\"")
-            return user
-        # Only modify the database if we are working with a valid date
-        self.db.add_date(user.id, date)
-        return user
-
-    def delete_date(self, user: User, date: str) -> User:
-        try:
-            user.delete_date(date)
-        except ValueError:
-            print(f"Unable to delete date \"{date}\" from user \"{user.id}\"")
-            return user
-
-        # Only modify the database if we are working with a valid date
-        self.db.delete_date(user.id, date)
-        return user
