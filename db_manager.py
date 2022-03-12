@@ -15,6 +15,10 @@ class DatabaseAccess(ABC):
     def add_date(self, user_id: str, date: str):
         """Add a date to a user"""
 
+    @abstractmethod
+    def delete_date(self, user_id: str, date: str):
+        """Delete a date from a user"""
+
 class SQLiteDatabaseAccess(DatabaseAccess):
     """Controls access to database"""
 
@@ -33,6 +37,9 @@ class SQLiteDatabaseAccess(DatabaseAccess):
 
     def add_date(self, user_id: str, date: str):
         self._execute('INSERT INTO Dates (UserId, Date) VALUES ( ?, ?)', (user_id, date))
+
+    def delete_date(self, user_id: str, date: str):
+        self._execute('DELETE FROM Dates WHERE UserId=? AND Date=?', (user_id, date))
 
     def _execute(self, command: str, parameters: Tuple) -> Cursor:
         """Execute SQLite command. Returns the cursor for any data fetches or None if database error"""
