@@ -37,7 +37,7 @@ class User:
         return self._dates
 
     @dates.setter
-    def dates(self, date_list: list[str]) -> list[str]:
+    def dates(self, date_list: list[str]):
         for date in date_list:
             if not valid_date(date):
                 raise ValueError
@@ -55,3 +55,24 @@ class User:
 
     def __repr__(self):
         return f"User ID {self.id}, dates: {self.dates}"
+
+class UserDate:
+    def __init__(self, date_raw: str, date_formatted: str):
+        self.date_raw = date_raw
+        self.date_formatted = date_formatted
+
+    @classmethod
+    def from_raw(cls, date_raw: str):
+        try:
+            date_formatted = datetime.strptime(date_raw, settings.RAW_DATE_FORMAT).strftime(settings.DATE_FORMAT)
+        except:
+            raise ValueError
+        return cls(date_raw=date_raw, date_formatted=date_formatted)
+
+    @classmethod
+    def from_formatted(cls, date_formatted: str):
+        try:
+            date_raw = datetime.strptime(date_formatted, settings.DATE_FORMAT).strftime(settings.RAW_DATE_FORMAT)
+        except:
+            raise ValueError
+        return cls(date_raw=date_raw, date_formatted=date_formatted)
