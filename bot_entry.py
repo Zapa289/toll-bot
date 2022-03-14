@@ -28,7 +28,6 @@ def app_home_opened(client: WebClient, event, logger):
 
 @bolt_app.action('addDate')
 def add_date(ack, client: WebClient, context, body):
-
     ack()
 
     # Find the current state of the datepicker
@@ -37,7 +36,7 @@ def add_date(ack, client: WebClient, context, body):
     date = date_raw if date_raw else datetime.today().strftime(settings.RAW_DATE_FORMAT)
 
     user_id = context['user_id']
-    bot.add_date(user_id, date)
+    bot.add_user_date(user_id, date)
     publish_home_tab(client, user_id)
 
 @bolt_app.action(re.compile('date_menu_\d'))
@@ -50,8 +49,12 @@ def date_menu(ack, client, payload, body, context):
         for block in body['view']['blocks']:
             if block['block_id'] == payload['block_id']:
                 date = block['text']['text']
-        bot.delete_date(user_id, date)
+        bot.delete_user_date(user_id, date)
         publish_home_tab(client, user_id)
+
+@bolt_app.action("DatePicker")
+def date_picker(ack):
+    ack()
 
 handler = SlackRequestHandler(bolt_app)
 
