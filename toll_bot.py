@@ -3,6 +3,13 @@ from lib.user import User
 from db_manager import DatabaseAccess
 from datetime import date
 
+def convert_dates(raw_dates: list[str]) -> list[date]:
+    """Convert a list of date strings from the db into date objects"""
+    dates: list[date] = []
+    for raw_date in raw_dates:
+        dates.append(date.fromisoformat(raw_date))
+    return dates
+
 class TollBot:
     def __init__(self, database: DatabaseAccess):
         self.db = database
@@ -14,9 +21,11 @@ class TollBot:
     def get_user(self, user_id) -> User:
         user = User(user_id)
         try:
-            user.dates = self.db.get_user_dates(user.id)
+            date_list = self.db.get_user_dates(user.id)
+            user.dates = convert_dates(date_list)
         except ValueError as e:
             print(f"Invalid date seen in database for user \"{user.id}\": {e}")
+
         return user
 
     def add_user_date(self, user_id: str, new_date: date):

@@ -17,7 +17,7 @@ def make_home_blocks(user: User) -> list[Block]:
         DividerBlock(),
         HeaderBlock(text="Dates in the office")
     ]
-    
+
     home_blocks.extend(get_dates(user))
 
     return home_blocks
@@ -41,7 +41,8 @@ def get_dates(user: User) -> list[Block]:
         date_blocks.append(
             SectionBlock(block_id=f"date_{num}", text=date_text,
                 accessory=OverflowMenuElement(action_id=f"date_menu_{num}", options=[
-                    Option(label="Remove date", value="remove_date")
+                    Option(label="Remove date", value="remove_date"),
+                    Option(label="Something", value="something")
                 ])
             )
         )
