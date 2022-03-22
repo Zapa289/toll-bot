@@ -1,5 +1,6 @@
 import settings
 import re
+import home
 from toll_bot import TollBot
 from db_manager import SQLiteDatabaseAccess
 
@@ -7,6 +8,7 @@ from flask import Flask, request
 from slack_bolt import App
 from slack_bolt.adapter.flask import SlackRequestHandler
 from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 from datetime import date, datetime
 
 app = Flask(__name__)
@@ -61,7 +63,7 @@ def date_menu(ack, client, payload, body, context):
                 raw_date = block['text']['text']
 
         selected_date = datetime.strptime(raw_date, settings.DATE_FORMAT).date()
-        
+
         bot.delete_user_date(user_id, selected_date)
         publish_home_tab(client, user_id)
 
@@ -69,6 +71,31 @@ def date_menu(ack, client, payload, body, context):
 def date_picker(ack):
     ack()
 
+@bolt_app.action('EnterAddress')
+def enter_address(ack, client: WebClient, body):
+    ack()
+    trigger_id = body['trigger_id']
+    address_modal = home.get_address_modal()
+
+    response = client.views_open(view=address_modal, trigger_id=trigger_id)
+
+@bolt_app.view("address-modal")
+def handle_address_modal(ack, view, context, client: WebClient):
+    ack()
+    modal_state = view['state']['values']
+
+    starting_address = modal_state['AddressInput']["AddressInput"]['value']
+    campus_selection = modal_state['CampusInput']['CampusSelection']['selected_option']['value']
+
+    user_id = context['user_id']
+    bot.handle_address_update(user_id, starting_address, campus_selection)
+    try:
+        publish_home_tab(client, user_id)
+    except SlackApiError as e:
+        print(e)
+
+
+###########################
 handler = SlackRequestHandler(bolt_app)
 
 @app.route("/slack/events", methods=["POST"])
