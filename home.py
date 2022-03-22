@@ -10,7 +10,6 @@ from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElem
 from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject
 
 def make_home_blocks(user: User) -> list[Block]:
-
     home_blocks: list[Block] = []
 
     home_blocks.extend(get_map_blocks(user=user))

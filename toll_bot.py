@@ -13,11 +13,11 @@ def convert_dates(raw_dates: list[str]) -> list[date]:
         dates.append(date.fromisoformat(raw_date))
     return dates
 
-
 class TollBot:
     def __init__(self, database: DatabaseAccess):
         self.db = database
         self.mapper = Mapper()
+
 
     def home_tab(self, user_id):
         user = self.get_user(user_id=user_id)
