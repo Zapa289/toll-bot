@@ -7,6 +7,12 @@ load_dotenv(dotenv_path=env_path)
 
 SLACKBOT_TOKEN = os.getenv('SLACKBOT_TOKEN')
 SLACKBOT_SIGNING_SECRET = os.getenv('SLACKBOT_SIGNING_SECRET')
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
+
+IMAGE_CACHE_PATH = Path('./cache')
+IMAGE_FILE_TYPE = ".png"
+
+IMAGE_HOST = "http://10.207.0.61:8000"
 
 # Date storage format: 2022-03-11
 RAW_DATE_FORMAT = '%Y-%m-%d'
