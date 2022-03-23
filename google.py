@@ -52,8 +52,8 @@ class Mapper:
 
 def main():
     mapper = Mapper(tolls=None)
-    address = "18714 Winding Atwood Ln"#input("Enter an address: ")
-    office = "HST" #input("Office: ")
+    address = input("Enter an address: ")
+    office = input("Office: ")
     try:
         directions = mapper.get_route(address, office)
     except ValueError:
