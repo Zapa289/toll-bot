@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+import logging.config
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -18,3 +20,6 @@ IMAGE_HOST = "http://10.207.0.61:8000"
 RAW_DATE_FORMAT = '%Y-%m-%d'
 # Date format: March 11, 2022
 DATE_FORMAT = '%B %d, %Y'
+
+logging.config.fileConfig(fname='log.conf', disable_existing_loggers=True)
+base_logger = logging.getLogger("System")

@@ -3,6 +3,8 @@ from offices import OFFICE_LIST, Office
 from googlemaps import Client
 from googlemaps.maps import StaticMapMarker
 
+logger = settings.base_logger.getChild(__name__)
+
 def get_poly_from_route(directions) -> str:
     return directions[0]['overview_polyline']['points']
 
@@ -13,7 +15,6 @@ def get_markers_from_directions(directions) -> list[dict]:
     end_marker = leg["end_location"]
 
     return [start_marker, end_marker]
-
 def get_office(office_str: str) -> Office | None:
     office = None
 
@@ -29,16 +30,17 @@ class Mapper:
         self.client = Client(key=self.key)
 
     def get_route(self, location:str, office_str: str):
+        logger.info("Creating route")
         office = get_office(office_str)
-
         if not office:
+            logger.error(f"Office {office_str} not found")
             raise ValueError("Invalid office input")
 
         return self.client.directions(location, f"place_id:{office.place_id}")
 
     def get_static_map(self, directions, toll_coords: list=None):
         """Get a static map from google. Returns a generator to get picture contents"""
-
+        logger.info("Get static map")
         # Get polyline from route
         route_polyline = get_poly_from_route(directions)
 
@@ -47,8 +49,16 @@ class Mapper:
         if toll_coords:
             markers.append(StaticMapMarker(toll_coords))
 
+        logger.debug(f"\tPolyline: {route_polyline}\n\tMarkers: {markers}")
+
         # Generate static map from polyline
-        return self.client.static_map(size=[500,400], path="enc:" + route_polyline, markers=markers)
+        try:
+            datastream = self.client.static_map(size=[500,400], path="enc:" + route_polyline, markers=markers)
+        except ValueError:
+            logger.error("Failed to get static map", exc_info=True)
+            return None
+
+        return datastream
 
 def main():
     mapper = Mapper(tolls=None)

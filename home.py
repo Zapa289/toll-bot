@@ -9,6 +9,16 @@ from slack_sdk.models.blocks.blocks import Block, SectionBlock, ActionsBlock, Di
 from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, ImageElement, PlainTextInputElement, StaticSelectElement
 from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject
 
+def get_home_tab(user: User) -> View:
+    """Generate the Home tab for a user"""
+
+    home_tab = View(
+        type="home",
+        blocks=make_home_blocks(user)
+    )
+
+    return home_tab
+
 def make_home_blocks(user: User) -> list[Block]:
 
     home_blocks: list[Block] = []
@@ -20,16 +30,6 @@ def make_home_blocks(user: User) -> list[Block]:
     home_blocks.extend(get_date_blocks(user))
 
     return home_blocks
-
-def get_home_tab(user: User) -> View:
-    """Generate the Home tab for a user"""
-
-    home_tab = View(
-        type="home",
-        blocks=make_home_blocks(user)
-    )
-
-    return home_tab
 
 def get_dates(user: User) -> list[Block]:
     """Get all the slack blocks for different """
