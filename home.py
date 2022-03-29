@@ -6,7 +6,7 @@ from datetime import date
 from lib.util import hash_user_id
 from slack_sdk.models.views import View
 from slack_sdk.models.blocks.blocks import Block, SectionBlock, ActionsBlock, DividerBlock, HeaderBlock, ContextBlock, InputBlock, ImageBlock
-from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, ImageElement, PlainTextInputElement, StaticSelectElement
+from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, PlainTextInputElement, StaticSelectElement
 from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject
 
 def make_home_blocks(user: User) -> list[Block]:
@@ -32,7 +32,7 @@ def get_home_tab(user: User) -> View:
     return home_tab
 
 def get_dates(user: User) -> list[Block]:
-    """Get all the slack blocks for different """
+    """Get all the slack blocks for dates belonging to user"""
     date_blocks: list[Block] = []
 
     for num, this_date in enumerate(user.dates):
@@ -45,7 +45,6 @@ def get_dates(user: User) -> list[Block]:
                 ])
             )
         )
-
     if not date_blocks:
         date_blocks = [ContextBlock(elements=[PlainTextObject(text="You do not have any tracked dates")])]
 
