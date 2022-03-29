@@ -89,11 +89,11 @@ def get_map_blocks(user: User) -> list[Block]:
 
     return map_blocks
 
-
 #
 # Modals
 #
 def get_campus_options() -> list[Option]:
+    """Returns a list of Slack Options for the available campuses"""
     office_options : list[Option] = []
 
     for office in OFFICE_LIST:
@@ -106,6 +106,7 @@ def get_campus_options() -> list[Option]:
     return office_options
 
 def get_address_modal() -> View:
+    """Generate the address input modal"""
     address_modal = View(
         type="modal",
         title="Toll Mapper",

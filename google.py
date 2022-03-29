@@ -1,5 +1,5 @@
-import settings
-from offices import OFFICE_LIST, Office
+from settings import GOOGLE_MAPS_API_KEY
+from offices import get_office
 from googlemaps import Client
 from googlemaps.maps import StaticMapMarker
 
@@ -14,18 +14,9 @@ def get_markers_from_directions(directions) -> list[dict]:
 
     return [start_marker, end_marker]
 
-def get_office(office_str: str) -> Office | None:
-    office = None
-
-    for some_office in OFFICE_LIST:
-        if some_office.label == office_str:
-            office = some_office
-
-    return office
-
 class Mapper:
     def __init__(self):
-        self.key = settings.GOOGLE_MAPS_API_KEY
+        self.key = GOOGLE_MAPS_API_KEY
         self.client = Client(key=self.key)
 
     def get_route(self, location:str, office_str: str):
