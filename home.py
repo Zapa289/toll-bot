@@ -9,21 +9,11 @@ from slack_sdk.models.blocks.blocks import Block, SectionBlock, ActionsBlock, Di
 from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, PlainTextInputElement, StaticSelectElement
 from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject
 
-def make_home_blocks(user: User) -> list[Block]:
-
-    home_blocks: list[Block] = []
-
-    home_blocks.extend(get_map_blocks(user=user))
-    home_blocks.append(DividerBlock())
-    home_blocks.extend(get_datepicker_blocks())
-    home_blocks.append(DividerBlock())
-    home_blocks.extend(get_date_blocks(user))
-
-    return home_blocks
+logger = settings.base_logger.getChild(__name__)
 
 def get_home_tab(user: User) -> View:
     """Generate the Home tab for a user"""
-
+    logger.info(f"Creating home tab for User {user.id}")
     home_tab = View(
         type="home",
         blocks=make_home_blocks(user)
@@ -31,9 +21,23 @@ def get_home_tab(user: User) -> View:
 
     return home_tab
 
+def make_home_blocks(user: User) -> list[Block]:
+
+    home_blocks: list[Block] = []
+
+    home_blocks.extend(get_map_blocks(user=user))
+    home_blocks.append(DividerBlock())
+    home_blocks.append(HeaderBlock(text="Dates in the office"))
+    home_blocks.extend(get_datepicker_blocks())
+    home_blocks.extend(get_date_blocks(user))
+
+    return home_blocks
+
 def get_dates(user: User) -> list[Block]:
     """Get all the slack blocks for dates belonging to user"""
     date_blocks: list[Block] = []
+
+    logger.info("Creating date blocks")
 
     for num, this_date in enumerate(user.dates):
         date_text = this_date.strftime(settings.DATE_FORMAT)
@@ -46,21 +50,21 @@ def get_dates(user: User) -> list[Block]:
             )
         )
     if not date_blocks:
+        logger.info("No tracked dates, creating context block")
         date_blocks = [ContextBlock(elements=[PlainTextObject(text="You do not have any tracked dates")])]
 
     return date_blocks
 
 def get_date_blocks(user: User) -> list[Block]:
-    date_blocks = [HeaderBlock(text="Dates in the office")]
+    date_blocks = []
     date_blocks.extend(get_dates(user))
     return date_blocks
 
 def get_datepicker_blocks() -> list[Block]:
     today = date.today().strftime(settings.DATE_FORMAT)
     return [
-        SectionBlock(text={"type": "mrkdwn", "text": f"*{today}*"}),
         ActionsBlock(block_id="DateBlock", elements=[
-            DatePickerElement(action_id="DatePicker", placeholder="Use today's date"),
+            DatePickerElement(action_id="DatePicker", placeholder=f"{today}"),
             ButtonElement(text="Add Date", action_id="addDate", value="AddDate")
             ]
         )
@@ -70,15 +74,26 @@ def get_map_blocks(user: User) -> list[Block]:
     map_blocks : list[Block] = []
     image_name = hash_user_id(user.id) + settings.IMAGE_FILE_TYPE
 
+    logger.info("Create map blocks")
+    logger.debug(f"Expected map image name: {image_name}")
+
     if not Path(settings.IMAGE_CACHE_PATH/image_name).is_file():
+        logger.info("No cached map found for user; Provide the Enter Address button")
         map_blocks.append(
             ActionsBlock(block_id="MapBlock", elements=[
                 ButtonElement(text="Enter starting address", action_id="EnterAddress", value="EnterAddress")
                 ])
         )
     else:
+        logger.info("Found cached map for user")
+
+        if not settings.IMAGE_HOST:
+            logger.warning("No image host configured. Images cannot be displayed")
+            return [ContextBlock(elements=[PlainTextObject(text="Route information unavailable, no image host configured")])]
+
+        logger.info("Create image block")
         url = settings.IMAGE_HOST + "/" + image_name
-        print(url)
+        logger.debug(f"Image URL: {url}")
         map_blocks.append(
             ImageBlock(
                 image_url=url,

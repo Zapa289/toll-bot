@@ -1,9 +1,10 @@
 import settings
 import re
 import home
+import logging
+
 from toll_bot import TollBot
 from db_manager import SQLiteDatabaseAccess
-
 from flask import Flask, request
 from slack_bolt import App
 from slack_bolt.adapter.flask import SlackRequestHandler
@@ -18,10 +19,15 @@ bolt_app = App(token=settings.SLACKBOT_TOKEN, signing_secret=settings.SLACKBOT_S
 bot = TollBot(SQLiteDatabaseAccess('test.db'))
 
 def publish_home_tab(client: WebClient, user_id):
+    logging.info(f"Publishing home tab for User {user_id}")
     home_tab = bot.home_tab(user_id)
-    client.views_publish(user_id=user_id, view=home_tab)
+    try:
+        client.views_publish(user_id=user_id, view=home_tab)
+    except SlackApiError:
+        logging.error("Could not publish view")
+        logging.debug("View: {home_tab}")
 
-def get_selected_value(payload):
+def get_selected_overflow_value(payload):
     """Returns the selected option from an overflow menu"""
     return payload["selected_option"]["value"]
 
@@ -30,10 +36,10 @@ def get_view_block_list(body):
     return body['view']['blocks']
 
 @bolt_app.event('app_home_opened')
-def app_home_opened(client: WebClient, event, logger):
+def app_home_opened(client: WebClient, event):
     """User clicked the home tab"""
-
     user_id = event.get('user')
+    logging.info(f"User {user_id} opened home tab")
     publish_home_tab(client, user_id)
 
 @bolt_app.action('addDate')
@@ -46,8 +52,10 @@ def add_date(ack, client: WebClient, context, body):
     input_date = current_state['DateBlock']['DatePicker']['selected_date']
     # None means datepicker has been left as default, use today's date
     new_date = date.fromisoformat(input_date) if input_date else date.today()
-
     user_id = context['user_id']
+
+    logging.info(f"Adding new date \"{new_date}\" to User {user_id}")
+
     bot.add_user_date(user_id, new_date)
     publish_home_tab(client, user_id)
 
@@ -57,12 +65,14 @@ def date_menu(ack, client, payload, body, context):
 
     user_id = context['user_id']
 
-    if  get_selected_value(payload) == "remove_date":
+    if  get_selected_overflow_value(payload) == "remove_date":
         for block in get_view_block_list(body):
             if block['block_id'] == payload['block_id']:
                 raw_date = block['text']['text']
 
         selected_date = datetime.strptime(raw_date, settings.DATE_FORMAT).date()
+
+        logging.info(f"Removing date \"{selected_date}\" from User {user_id}")
 
         bot.delete_user_date(user_id, selected_date)
         publish_home_tab(client, user_id)
@@ -77,6 +87,8 @@ def enter_address(ack, client: WebClient, body):
     trigger_id = body['trigger_id']
     address_modal = home.get_address_modal()
 
+    logging.info("User hit Enter Address")
+
     response = client.views_open(view=address_modal, trigger_id=trigger_id)
 
 @bolt_app.view("address-modal")
@@ -88,11 +100,14 @@ def handle_address_modal(ack, view, context, client: WebClient):
     campus_selection = modal_state['CampusInput']['CampusSelection']['selected_option']['value']
 
     user_id = context['user_id']
+
+    logging.info(f"User {user_id} submitted address modal")
+
     bot.handle_address_update(user_id, starting_address, campus_selection)
     try:
         publish_home_tab(client, user_id)
-    except SlackApiError as e:
-        print(e)
+    except SlackApiError:
+        logging.error("Slack reported an error", exc_info=True)
 
 
 ###########################
