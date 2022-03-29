@@ -56,7 +56,7 @@ class SQLiteDatabaseAccess(DatabaseAccess):
             try:
                 cur.execute(command, parameters)
             except sqlite3.OperationalError as e:
-                logger.error(f"SQLite error on command '{command}'", exc_info=True)
+                logger.error(f"SQLite error on command '{command}'; Parameters: {parameters}", exc_info=True)
                 return None
 
         return cur

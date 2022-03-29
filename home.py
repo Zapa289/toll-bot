@@ -9,9 +9,11 @@ from slack_sdk.models.blocks.blocks import Block, SectionBlock, ActionsBlock, Di
 from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, ImageElement, PlainTextInputElement, StaticSelectElement
 from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject
 
+logger = settings.base_logger.getChild(__name__)
+
 def get_home_tab(user: User) -> View:
     """Generate the Home tab for a user"""
-
+    logger.info(f"Creating home tab for User {user.id}")
     home_tab = View(
         type="home",
         blocks=make_home_blocks(user)
@@ -35,6 +37,8 @@ def get_dates(user: User) -> list[Block]:
     """Get all the slack blocks for different """
     date_blocks: list[Block] = []
 
+    logger.info("Creating date blocks")
+
     for num, this_date in enumerate(user.dates):
         date_text = this_date.strftime(settings.DATE_FORMAT)
         date_blocks.append(
@@ -47,6 +51,7 @@ def get_dates(user: User) -> list[Block]:
         )
 
     if not date_blocks:
+        logger.info("No tracked dates, creating context block")
         date_blocks = [ContextBlock(elements=[PlainTextObject(text="You do not have any tracked dates")])]
 
     return date_blocks
@@ -71,21 +76,27 @@ def get_map_blocks(user: User) -> list[Block]:
     map_blocks : list[Block] = []
     image_name = hash_user_id(user.id) + settings.IMAGE_FILE_TYPE
 
+    logger.info("Create map blocks")
+    logger.debug(f"Expected map image name: {image_name}")
+
     if not Path(settings.IMAGE_CACHE_PATH/image_name).is_file():
+        logger.info("No cached map found for user; Provide the Enter Address button")
         map_blocks.append(
             ActionsBlock(block_id="MapBlock", elements=[
                 ButtonElement(text="Enter starting address", action_id="EnterAddress", value="EnterAddress")
                 ])
         )
     else:
-        url = settings.IMAGE_HOST + "/" + image_name
-        print(url)
-        map_blocks.append(
-            ImageBlock(
-                image_url=url,
-                alt_text="Your route to work"
+        logger.info("Found cached map for user; Serve up the image")
+        if settings.IMAGE_HOST:
+            url = settings.IMAGE_HOST + "/" + image_name
+            print(url)
+            map_blocks.append(
+                ImageBlock(
+                    image_url=url,
+                    alt_text="Your route to work"
+                )
             )
-        )
 
     return map_blocks
 
