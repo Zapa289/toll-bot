@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
 
 @dataclass(kw_only=True)
 class Office:
@@ -8,9 +7,9 @@ class Office:
     description : str
     address : str
     place_id : str
-    location : dict[str, Any]
+    location : dict
 
-OFFICE_DATA = [
+_OFFICE_DATA = [
 {
     "label" : "HST",
     "description" : "Houston Spring Campus",
@@ -22,17 +21,13 @@ OFFICE_DATA = [
     }
 }
 ]
-        
-office_list : list[Office] = []
 
-for office in OFFICE_DATA:
-    office_list.append(Office(**office))
-    
-OFFICE_LIST = office_list
+#Create the office list
+OFFICE_LIST = [Office(**office) for office in _OFFICE_DATA]
 
 def get_office(office_str: str) -> Office | None:
     for some_office in OFFICE_LIST:
         if some_office.label == office_str:
             return some_office
 
-    return None    
+    return None
