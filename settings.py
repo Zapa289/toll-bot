@@ -14,7 +14,8 @@ GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
 IMAGE_CACHE_PATH = Path('./cache')
 IMAGE_FILE_TYPE = ".png"
 
-IMAGE_HOST = "http://10.207.0.61:8000"
+#IMAGE_HOST = "http://10.207.0.61:8000"
+IMAGE_HOST = None
 
 # Date storage format: 2022-03-11
 RAW_DATE_FORMAT = '%Y-%m-%d'

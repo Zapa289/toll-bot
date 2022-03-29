@@ -6,7 +6,7 @@ from datetime import date
 from lib.util import hash_user_id
 from slack_sdk.models.views import View
 from slack_sdk.models.blocks.blocks import Block, SectionBlock, ActionsBlock, DividerBlock, HeaderBlock, ContextBlock, InputBlock, ImageBlock
-from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, ImageElement, PlainTextInputElement, StaticSelectElement
+from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, PlainTextInputElement, StaticSelectElement
 from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject
 
 logger = settings.base_logger.getChild(__name__)
@@ -27,8 +27,8 @@ def make_home_blocks(user: User) -> list[Block]:
 
     home_blocks.extend(get_map_blocks(user=user))
     home_blocks.append(DividerBlock())
+    home_blocks.append(HeaderBlock(text="Dates in the office"))
     home_blocks.extend(get_datepicker_blocks())
-    home_blocks.append(DividerBlock())
     home_blocks.extend(get_date_blocks(user))
 
     return home_blocks
@@ -57,16 +57,15 @@ def get_dates(user: User) -> list[Block]:
     return date_blocks
 
 def get_date_blocks(user: User) -> list[Block]:
-    date_blocks = [HeaderBlock(text="Dates in the office")]
+    date_blocks = []
     date_blocks.extend(get_dates(user))
     return date_blocks
 
 def get_datepicker_blocks() -> list[Block]:
     today = date.today().strftime(settings.DATE_FORMAT)
     return [
-        SectionBlock(text={"type": "mrkdwn", "text": f"*{today}*"}),
         ActionsBlock(block_id="DateBlock", elements=[
-            DatePickerElement(action_id="DatePicker", placeholder="Use today's date"),
+            DatePickerElement(action_id="DatePicker", placeholder=f"{today}"),
             ButtonElement(text="Add Date", action_id="addDate", value="AddDate")
             ]
         )
@@ -87,16 +86,21 @@ def get_map_blocks(user: User) -> list[Block]:
                 ])
         )
     else:
-        logger.info("Found cached map for user; Serve up the image")
-        if settings.IMAGE_HOST:
-            url = settings.IMAGE_HOST + "/" + image_name
-            print(url)
-            map_blocks.append(
-                ImageBlock(
-                    image_url=url,
-                    alt_text="Your route to work"
-                )
+        logger.info("Found cached map for user")
+
+        if not settings.IMAGE_HOST:
+            logger.warning("No image host configured. Images cannot be displayed")
+            return [ContextBlock(elements=[PlainTextObject(text="Route information unavailable, no image host configured")])]
+
+        logger.info("Create image block")
+        url = settings.IMAGE_HOST + "/" + image_name
+        logger.debug(f"Image URL: {url}")
+        map_blocks.append(
+            ImageBlock(
+                image_url=url,
+                alt_text="Your route to work"
             )
+        )
 
     return map_blocks
 

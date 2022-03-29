@@ -21,7 +21,11 @@ bot = TollBot(SQLiteDatabaseAccess('test.db'))
 def publish_home_tab(client: WebClient, user_id):
     logging.info(f"Publishing home tab for User {user_id}")
     home_tab = bot.home_tab(user_id)
-    client.views_publish(user_id=user_id, view=home_tab)
+    try:
+        client.views_publish(user_id=user_id, view=home_tab)
+    except SlackApiError:
+        logging.error("Could not publish view")
+        logging.debug("View: {home_tab}")
 
 def get_selected_overflow_value(payload):
     """Returns the selected option from an overflow menu"""
