@@ -11,11 +11,12 @@ SLACKBOT_TOKEN = os.getenv('SLACKBOT_TOKEN')
 SLACKBOT_SIGNING_SECRET = os.getenv('SLACKBOT_SIGNING_SECRET')
 GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
 HOST_IP = os.getenv('HOST_IP')
+# ex. "C:/Apache24/htdocs/image-cache"
+IMAGE_CACHE_PATH = os.getenv('IMAGE_CACHE_PATH')
 
-IMAGE_CACHE_PATH = Path('C:/Apache24/htdocs/image-cache')
 IMAGE_FILE_TYPE = ".png"
 IMAGE_SIZE = [600,400]
-IMAGE_HOST = HOST_IP + "image-cache/"
+IMAGE_HOST = HOST_IP + "image-cache/" if HOST_IP else None
 
 # Date storage format: 2022-03-11
 RAW_DATE_FORMAT = '%Y-%m-%d'
