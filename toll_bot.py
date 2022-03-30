@@ -1,10 +1,10 @@
 import home
 import settings
-from lib.user import User
+from user import User
 from db_manager import DatabaseAccess
 from datetime import date
 from google import Mapper
-from lib.util import save_user_route_map, delete_image
+from file_util import save_user_route_map, delete_image
 
 logger = settings.base_logger.getChild(__name__)
 

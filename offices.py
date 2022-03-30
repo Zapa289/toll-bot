@@ -26,6 +26,7 @@ _OFFICE_DATA = [
 OFFICE_LIST = [Office(**office) for office in _OFFICE_DATA]
 
 def get_office(office_str: str) -> Office | None:
+    """Compare a given string against the labels in the office list. Return the matched office if any."""
     for some_office in OFFICE_LIST:
         if some_office.label == office_str:
             return some_office
