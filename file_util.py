@@ -1,113 +1,124 @@
-import json
 import fnmatch
+import json
 import os
-from settings import IMAGE_CACHE_PATH, IMAGE_FILE_TYPE, base_logger
 from hashlib import md5
 from pathlib import Path
 
+from settings import IMAGE_CACHE_PATH, IMAGE_FILE_TYPE, base_logger
+
 logger = base_logger.getChild(__name__)
 
-def find_file(prefix: str) -> list:
-	"""Search for files belonging to a user by matching partial filenames to the user_id hash"""
-	pattern = prefix + "_*.png"
-	result = []
 
-	for _, _, files in os.walk(IMAGE_CACHE_PATH):
-		for name in files:
-			if fnmatch.fnmatch(name, pattern):
-				result.append(name)
-	return result
+def find_file(prefix: str) -> list:
+    """Search for files belonging to a user by matching partial filenames to the user_id hash"""
+    pattern = prefix + "_*.png"
+    result = []
+
+    for _, _, files in os.walk(IMAGE_CACHE_PATH):
+        for name in files:
+            if fnmatch.fnmatch(name, pattern):
+                result.append(name)
+    return result
+
 
 def hash_user_id(user_id: str) -> str:
-	return hash_info(user_id)
+    return hash_info(user_id)
+
 
 def hash_route(route: dict):
-	hashable = json.dumps(route, sort_keys=True)
-	return hash_info(hashable)
+    hashable = json.dumps(route, sort_keys=True)
+    return hash_info(hashable)
+
 
 def hash_info(string: str) -> str:
-	return md5(string.encode('utf-8')).hexdigest()
+    return md5(string.encode("utf-8")).hexdigest()
+
 
 def prune_multiple_images(files: list[str]) -> str:
-	"""Removes all but the newest image belonging to a user in the cache.
-		Returns the filename of the newest image."""
-	if len(files) <= 1:
-		logger.error(f"Pruning requires more than file names: {files}")
-		return None
+    """Removes all but the newest image belonging to a user in the cache.
+    Returns the filename of the newest image."""
+    if len(files) <= 1:
+        logger.error(f"Pruning requires more than file names: {files}")
+        return None
 
-	path_list = [Path(IMAGE_CACHE_PATH, file) for file in files]
-	newest_file_path = sorted([f.absolute() for f in path_list], key=os.path.getctime, reverse=True)[0]
+    path_list = [Path(IMAGE_CACHE_PATH, file) for file in files]
+    newest_file_path = sorted(
+        [f.absolute() for f in path_list], key=os.path.getctime, reverse=True
+    )[0]
 
-	for file in files:
-		if not file is newest_file_path.name:
-			logger.info(f"Deleting image from cache: {file}")
-			delete_image_from_cache(file)
+    for file in files:
+        if not file is newest_file_path.name:
+            logger.info(f"Deleting image from cache: {file}")
+            delete_image_from_cache(file)
 
-	return newest_file_path.name
+    return newest_file_path.name
+
 
 def get_file_name(user_id) -> str:
-	"""Find the image that matches a user_id. If multiple files are found then the older
-		images will be deleted."""
-	file_name = None
-	file_name_prefix = hash_user_id(user_id)
+    """Find the image that matches a user_id. If multiple files are found then the older
+    images will be deleted."""
+    file_name = None
+    file_name_prefix = hash_user_id(user_id)
 
-	files = find_file(file_name_prefix)
+    files = find_file(file_name_prefix)
 
-	if not files:
-		logger.warning(f"No file found that belongs to user")
-		return None
-	if len(files) > 1:
-		logger.error("Too many images belonging to user! Deleting old files")
-		file_name = prune_multiple_images(files)
-		return file_name
+    if not files:
+        logger.warning(f"No file found that belongs to user")
+        return None
+    if len(files) > 1:
+        logger.error("Too many images belonging to user! Deleting old files")
+        file_name = prune_multiple_images(files)
+        return file_name
 
-	file_name = files[0]	
-	logger.info(f"Found file: {file_name}")
+    file_name = files[0]
+    logger.info(f"Found file: {file_name}")
 
-	return file_name
+    return file_name
+
 
 def create_file_name(user_id: str, route: dict) -> str:
-	"""Create a file name based on the user_id and the start/end addresses of the route.
-		All file names will be of the form {hash of user_id}_{hash of addresses}.{filetype}"""
-	file_name = "".join([
-		hash_user_id(user_id=user_id),
-		"_",
-		hash_route(route),
-		IMAGE_FILE_TYPE
-	])
-	return file_name
+    """Create a file name based on the user_id and the start/end addresses of the route.
+    All file names will be of the form {hash of user_id}_{hash of addresses}.{filetype}"""
+    file_name = "".join(
+        [hash_user_id(user_id=user_id), "_", hash_route(route), IMAGE_FILE_TYPE]
+    )
+    return file_name
+
 
 def write_to_image_cache(file_name: str, datastream):
-	if not IMAGE_CACHE_PATH.exists():
-		logger.warning(f"Creating image chache at {IMAGE_CACHE_PATH}")
-		os.mkdir(IMAGE_CACHE_PATH)
+    if not IMAGE_CACHE_PATH.exists():
+        logger.warning(f"Creating image chache at {IMAGE_CACHE_PATH}")
+        os.mkdir(IMAGE_CACHE_PATH)
 
-	logger.info(f"Writing out image to {file_name}")
-	with open(IMAGE_CACHE_PATH/file_name, "wb") as file:
-		for chunk in datastream:
-			file.write(chunk)
+    logger.info(f"Writing out image to {file_name}")
+    with open(IMAGE_CACHE_PATH / file_name, "wb") as file:
+        for chunk in datastream:
+            file.write(chunk)
+
 
 def delete_image_from_cache(file_name: str):
-	file_path = Path(IMAGE_CACHE_PATH/file_name)
-	try:
-		os.remove(file_path)
-	except FileNotFoundError:
-		logger.error(f"Could not find image to delete! \"{file_path}\"")
+    file_path = Path(IMAGE_CACHE_PATH / file_name)
+    try:
+        os.remove(file_path)
+    except FileNotFoundError:
+        logger.error(f'Could not find image to delete! "{file_path}"')
+
 
 def delete_image(user_id: str):
-	file_name = get_file_name(user_id)
-	delete_image_from_cache(file_name)
+    file_name = get_file_name(user_id)
+    delete_image_from_cache(file_name)
+
 
 def save_user_route_map(user_id: str, route: dict, datastream):
 
-	# Check for map that already exists for user
+    # Check for map that already exists for user
 
-	file_name = get_file_name(user_id)	
+    file_name = get_file_name(user_id)
 
-	if file_name:
-		logger.warning(f"Found another file for user, deleting old file")
-		logger.debug(f"Deleted image: {file_name}")
-		delete_image_from_cache(file_name)
+    if file_name:
+        logger.warning(f"Found another file for user, deleting old file")
+        logger.debug(f"Deleted image: {file_name}")
+        delete_image_from_cache(file_name)
 
-	file_name = create_file_name(user_id, route)
-	write_to_image_cache(file_name=file_name, datastream=datastream)
+    file_name = create_file_name(user_id, route)
+    write_to_image_cache(file_name=file_name, datastream=datastream)

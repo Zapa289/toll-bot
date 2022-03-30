@@ -1,7 +1,9 @@
 from datetime import date
-    
+
+
 class User:
     """Contains Slack user information"""
+
     def __init__(self, user_id) -> None:
         self.id = user_id
         self._dates: list[date] = []

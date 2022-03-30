@@ -1,12 +1,14 @@
+from datetime import date
+
 import home
 import settings
-from user import User
 from db_manager import DatabaseAccess
-from datetime import date
+from file_util import delete_image, save_user_route_map
 from google import Mapper
-from file_util import save_user_route_map, delete_image
+from user import User
 
 logger = settings.base_logger.getChild(__name__)
+
 
 def convert_dates(raw_dates: list[str]) -> list[date]:
     """Convert a list of date strings from the db into date objects"""
@@ -31,7 +33,7 @@ class TollBot:
             date_list = self.db.get_user_dates(user.id)
             user.dates = convert_dates(date_list)
         except ValueError as e:
-            logger.error(f"Invalid date seen in database for user \"{user.id}\": {e}")
+            logger.error(f'Invalid date seen in database for user "{user.id}": {e}')
 
         return user
 
@@ -41,7 +43,9 @@ class TollBot:
         try:
             user.add_date(new_date)
         except ValueError:
-            logger.error(f"Unable to add date \"{new_date.isoformat()}\" to user \"{user.id}\"")
+            logger.error(
+                f'Unable to add date "{new_date.isoformat()}" to user "{user.id}"'
+            )
             return user
         # Only modify the database if we are working with a valid date
         self.db.add_date(user.id, new_date.isoformat())
@@ -54,31 +58,34 @@ class TollBot:
         try:
             user.delete_date(date_to_remove)
         except ValueError:
-            logger.error(f"Unable to delete date \"{date_to_remove.isoformat()}\" from user \"{user.id}\"")
+            logger.error(
+                f'Unable to delete date "{date_to_remove.isoformat()}" from user "{user.id}"'
+            )
             return user
 
         # Only modify the database if we are working with a valid date
         self.db.delete_date(user.id, date_to_remove.isoformat())
         return user
 
-    def handle_address_update(self, user_id: str, starting_address: str, campus_selection: str):
+    def handle_address_update(
+        self, user_id: str, starting_address: str, campus_selection: str
+    ):
         try:
             directions = self.mapper.get_route(starting_address, campus_selection)
         except ValueError:
             logger.error("Could not get directions")
-            logger.debug(f"Starting Address: {starting_address}, Campus: {campus_selection}")
+            logger.debug(
+                f"Starting Address: {starting_address}, Campus: {campus_selection}"
+            )
             return
 
-        #toll_coords = None
+        # toll_coords = None
         datastream = self.mapper.get_static_map(directions=directions, toll_coords=None)
         if not datastream:
             logger.error("Could not get static map")
             return
 
-        route_info = {
-            "start" : starting_address,
-            "end"   : campus_selection
-        }
+        route_info = {"start": starting_address, "end": campus_selection}
 
         save_user_route_map(user_id, route_info, datastream)
 

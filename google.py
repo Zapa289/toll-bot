@@ -1,10 +1,13 @@
 from dataclasses import dataclass
-from settings import GOOGLE_MAPS_API_KEY, base_logger, IMAGE_SIZE
-from offices import get_office
+
 from googlemaps import Client
 from googlemaps.maps import StaticMapMarker
 
+from offices import get_office
+from settings import GOOGLE_MAPS_API_KEY, IMAGE_SIZE, base_logger
+
 logger = base_logger.getChild(__name__)
+
 
 @dataclass
 class Directions:
@@ -12,7 +15,7 @@ class Directions:
 
     @property
     def _leg(self):
-        return self.directions[0]['legs'][0]
+        return self.directions[0]["legs"][0]
 
     @property
     def markers(self) -> list[str]:
@@ -23,22 +26,23 @@ class Directions:
 
     @property
     def start_address(self):
-        return self._leg['start_address']
+        return self._leg["start_address"]
 
     @property
     def end_address(self):
-        return self._leg['end_address']
+        return self._leg["end_address"]
 
     @property
     def polyline(self):
-        return self.directions[0]['overview_polyline']['points']
+        return self.directions[0]["overview_polyline"]["points"]
+
 
 class Mapper:
     def __init__(self):
         self.key = GOOGLE_MAPS_API_KEY
         self.client = Client(key=self.key)
 
-    def get_route(self, location:str, office_str: str) -> Directions:
+    def get_route(self, location: str, office_str: str) -> Directions:
         """Get Google Maps route between the given location and chosen office"""
         logger.info("Creating route")
         office = get_office(office_str)
@@ -46,9 +50,11 @@ class Mapper:
             logger.error(f"Office {office_str} not found")
             raise ValueError("Invalid office input")
 
-        return Directions(self.client.directions(location, f"place_id:{office.place_id}"))
+        return Directions(
+            self.client.directions(location, f"place_id:{office.place_id}")
+        )
 
-    def get_static_map(self, directions: Directions, toll_coords: list=None):
+    def get_static_map(self, directions: Directions, toll_coords: list = None):
         """Get a static map from google. Returns a generator to get picture contents"""
         logger.info("Get static map")
 
@@ -61,12 +67,15 @@ class Mapper:
 
         # Generate static map from polyline
         try:
-            datastream = self.client.static_map(size=IMAGE_SIZE, path="enc:" + directions.polyline, markers=markers)
+            datastream = self.client.static_map(
+                size=IMAGE_SIZE, path="enc:" + directions.polyline, markers=markers
+            )
         except ValueError:
             logger.error("Failed to get static map", exc_info=True)
             return None
 
         return datastream
+
 
 def main():
     mapper = Mapper(tolls=None)
@@ -82,6 +91,7 @@ def main():
     with open("test3.png", "wb") as file:
         for chunk in thing:
             _ = file.write(chunk)
+
 
 if __name__ == "__main__":
     main()
