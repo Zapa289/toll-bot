@@ -13,7 +13,7 @@ SLACKBOT_SIGNING_SECRET = os.getenv("SLACKBOT_SIGNING_SECRET")
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 HOST_IP = os.getenv("HOST_IP")
 # ex. "C:/Apache24/htdocs/image-cache"
-IMAGE_CACHE_PATH = os.getenv("IMAGE_CACHE_PATH")
+IMAGE_CACHE_PATH = Path(os.getenv("IMAGE_CACHE_PATH"))
 
 IMAGE_FILE_TYPE = ".png"
 IMAGE_SIZE = [600, 400]

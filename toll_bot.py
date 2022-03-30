@@ -3,7 +3,7 @@ from datetime import date
 import home
 import settings
 from db_manager import DatabaseAccess
-from file_util import delete_image, save_user_route_map
+from file_util import delete_user_map, save_user_route_map
 from google import Mapper
 from user import User
 
@@ -19,39 +19,43 @@ def convert_dates(raw_dates: list[str]) -> list[date]:
 
 
 class TollBot:
+    """Manages user creation and database interactions"""
+
     def __init__(self, database: DatabaseAccess):
-        self.db = database
+        self.database = database
         self.mapper = Mapper()
 
     def home_tab(self, user_id):
+        """Generate home tab for a user."""
         user = self.get_user(user_id=user_id)
         return home.get_home_tab(user)
 
     def get_user(self, user_id) -> User:
+        """Create a user with dates matching the user_id in the database."""
         user = User(user_id)
         try:
-            date_list = self.db.get_user_dates(user.id)
+            date_list = self.database.get_user_dates(user.id)
             user.dates = convert_dates(date_list)
-        except ValueError as e:
-            logger.error(f'Invalid date seen in database for user "{user.id}": {e}')
+        except ValueError as error:
+            logger.error('Invalid date seen in database for user "%s": %s', user_id, error)
 
         return user
 
     def add_user_date(self, user_id: str, new_date: date):
+        """Add a date to a user and add the date to the database."""
         logger.info("Adding new date")
         user = self.get_user(user_id)
         try:
             user.add_date(new_date)
         except ValueError:
-            logger.error(
-                f'Unable to add date "{new_date.isoformat()}" to user "{user.id}"'
-            )
+            logger.error('Unable to add date "%s{}" to User %s', new_date.isoformat(), user.id)
             return user
         # Only modify the database if we are working with a valid date
-        self.db.add_date(user.id, new_date.isoformat())
+        self.database.add_date(user.id, new_date.isoformat())
         return user
 
     def delete_user_date(self, user_id, date_to_remove: date):
+        """Delete date from a user and remove the date from the database."""
         logger.info("Remove date")
         user = self.get_user(user_id)
 
@@ -59,24 +63,22 @@ class TollBot:
             user.delete_date(date_to_remove)
         except ValueError:
             logger.error(
-                f'Unable to delete date "{date_to_remove.isoformat()}" from user "{user.id}"'
+                'Unable to delete date "%s" from User %s', date_to_remove.isoformat(), user.id
             )
             return user
 
         # Only modify the database if we are working with a valid date
-        self.db.delete_date(user.id, date_to_remove.isoformat())
+        self.database.delete_date(user.id, date_to_remove.isoformat())
         return user
 
-    def handle_address_update(
-        self, user_id: str, starting_address: str, campus_selection: str
-    ):
+    def handle_address_update(self, user_id: str, starting_address: str, campus_selection: str):
+        """Take a start and end address and then create a static map from Google Maps.
+        Static map will be downloaded and saved to the image cache."""
         try:
             directions = self.mapper.get_route(starting_address, campus_selection)
         except ValueError:
             logger.error("Could not get directions")
-            logger.debug(
-                f"Starting Address: {starting_address}, Campus: {campus_selection}"
-            )
+            logger.debug(f"Starting Address: {starting_address}, Campus: {campus_selection}")
             return
 
         # toll_coords = None
@@ -90,4 +92,5 @@ class TollBot:
         save_user_route_map(user_id, route_info, datastream)
 
     def handle_delete_route(self, user_id):
-        delete_image(user_id=user_id)
+        """Delete image from image cache"""
+        delete_user_map(user_id=user_id)

@@ -11,6 +11,9 @@ logger = base_logger.getChild(__name__)
 
 @dataclass
 class Directions:
+    """Accepts directions from Google Maps and makes various attributes
+    accessible."""
+
     directions: dict
 
     @property
@@ -19,6 +22,7 @@ class Directions:
 
     @property
     def markers(self) -> list[str]:
+        """Get the start and end markers from the directions."""
         start_marker = self._leg["start_location"]
         end_marker = self._leg["end_location"]
 
@@ -26,18 +30,24 @@ class Directions:
 
     @property
     def start_address(self):
+        """Get the start address from the directions."""
         return self._leg["start_address"]
 
     @property
     def end_address(self):
+        """Get the end address from the directions."""
         return self._leg["end_address"]
 
     @property
     def polyline(self):
+        """Get the overview polyline from the directions."""
         return self.directions[0]["overview_polyline"]["points"]
 
 
 class Mapper:
+    """Get directions and create static maps from Google Maps.
+    Also integrates the toll locations from TollGuru."""
+
     def __init__(self):
         self.key = GOOGLE_MAPS_API_KEY
         self.client = Client(key=self.key)
@@ -78,7 +88,8 @@ class Mapper:
 
 
 def main():
-    mapper = Mapper(tolls=None)
+    """Tester for Gmaps"""
+    mapper = Mapper()
     address = input("Enter an address: ")
     office = input("Office: ")
     try:

@@ -43,7 +43,7 @@ def get_home_tab(user: User) -> View:
 
 
 def make_home_blocks(user: User) -> list[Block]:
-
+    """Create all the blocks cooresponding to a home View"""
     home_blocks: list[Block] = []
 
     home_blocks.extend(get_map_blocks(user=user))
@@ -79,21 +79,21 @@ def get_dates(user: User) -> list[Block]:
     if not date_blocks:
         logger.info("No tracked dates, creating context block")
         date_blocks = [
-            ContextBlock(
-                elements=[PlainTextObject(text="You do not have any tracked dates")]
-            )
+            ContextBlock(elements=[PlainTextObject(text="You do not have any tracked dates")])
         ]
 
     return date_blocks
 
 
 def get_date_blocks(user: User) -> list[Block]:
+    """Create blocks for all of the dates tracked by a user."""
     date_blocks = []
     date_blocks.extend(get_dates(user))
     return date_blocks
 
 
 def get_datepicker_blocks() -> list[Block]:
+    """Create the datepicker block"""
     today = date.today().strftime(settings.DATE_FORMAT)
     return [
         ActionsBlock(
@@ -107,6 +107,11 @@ def get_datepicker_blocks() -> list[Block]:
 
 
 def get_map_blocks(user: User) -> list[Block]:
+    """Create the blocks for the static map. Searches the image cache for a
+    map belonging to the user to serve up. If there is no map cached for
+    the user then a button that prompts the user to enter an address will
+    be created."""
+
     map_blocks: list[Block] = []
     image_name = get_file_name(user.id)
 
