@@ -4,7 +4,7 @@ from lib.user import User
 from db_manager import DatabaseAccess
 from datetime import date
 from google import Mapper
-from lib.util import hash_user_id, write_to_image_cache
+from lib.util import save_user_route_map, delete_image
 
 logger = settings.base_logger.getChild(__name__)
 
@@ -62,7 +62,6 @@ class TollBot:
         return user
 
     def handle_address_update(self, user_id: str, starting_address: str, campus_selection: str):
-        #user = self.get_user(user_id)
         try:
             directions = self.mapper.get_route(starting_address, campus_selection)
         except ValueError:
@@ -71,10 +70,17 @@ class TollBot:
             return
 
         #toll_coords = None
-        datastream = self.mapper.get_static_map(directions=directions)
+        datastream = self.mapper.get_static_map(directions=directions, toll_coords=None)
         if not datastream:
             logger.error("Could not get static map")
             return
 
-        filename = hash_user_id(user_id) + settings.IMAGE_FILE_TYPE
-        write_to_image_cache(filename, datastream)
+        route_info = {
+            "start" : starting_address,
+            "end"   : campus_selection
+        }
+
+        save_user_route_map(user_id, route_info, datastream)
+
+    def handle_delete_route(self, user_id):
+        delete_image(user_id=user_id)

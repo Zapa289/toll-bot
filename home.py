@@ -3,11 +3,11 @@ from pathlib import Path
 from offices import OFFICE_LIST
 from lib.user import User
 from datetime import date
-from lib.util import hash_user_id
+from lib.util import save_user_route_map, get_file_name
 from slack_sdk.models.views import View
 from slack_sdk.models.blocks.blocks import Block, SectionBlock, ActionsBlock, DividerBlock, HeaderBlock, ContextBlock, InputBlock, ImageBlock
 from slack_sdk.models.blocks.block_elements import DatePickerElement, ButtonElement, OverflowMenuElement, PlainTextInputElement, StaticSelectElement
-from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject
+from slack_sdk.models.blocks.basic_components import Option, PlainTextObject, MarkdownTextObject, ConfirmObject
 
 logger = settings.base_logger.getChild(__name__)
 
@@ -72,16 +72,16 @@ def get_datepicker_blocks() -> list[Block]:
 
 def get_map_blocks(user: User) -> list[Block]:
     map_blocks : list[Block] = []
-    image_name = hash_user_id(user.id) + settings.IMAGE_FILE_TYPE
+    image_name = get_file_name(user.id)
 
     logger.info("Create map blocks")
     logger.debug(f"Expected map image name: {image_name}")
 
-    if not Path(settings.IMAGE_CACHE_PATH/image_name).is_file():
+    if not image_name or not Path(settings.IMAGE_CACHE_PATH/image_name).is_file():
         logger.info("No cached map found for user; Provide the Enter Address button")
         map_blocks.append(
             ActionsBlock(block_id="MapBlock", elements=[
-                ButtonElement(text="Enter starting address", action_id="EnterAddress", value="EnterAddress")
+                ButtonElement(text="Enter starting address", action_id="EnterAddress", value="EnterAddress", style="primary")
                 ])
         )
     else:
@@ -92,12 +92,28 @@ def get_map_blocks(user: User) -> list[Block]:
             return [ContextBlock(elements=[PlainTextObject(text="Route information unavailable, no image host configured")])]
 
         logger.info("Create image block")
-        url = settings.IMAGE_HOST + "/" + image_name
+        url = settings.IMAGE_HOST + image_name
         logger.debug(f"Image URL: {url}")
+        map_blocks.append(
+            HeaderBlock(text="Your route to work")
+        )
         map_blocks.append(
             ImageBlock(
                 image_url=url,
                 alt_text="Your route to work"
+            )
+        )
+        map_blocks.append(
+            ActionsBlock(block_id="MapBlock", elements=[
+                ButtonElement(text="Change Route", action_id="EnterAddress", value="EnterAddress"),
+                ButtonElement(text="Delete Route", action_id="DeleteRoute", value="DeleteRoute", style="danger",
+                    confirm=ConfirmObject(
+                        title="Confirm Delete Route",
+                        text="Are you sure you want to delete your route? This cannot be undone.",
+                        deny="Cancel",
+                        style="danger")
+                )
+                ]
             )
         )
 
@@ -155,5 +171,4 @@ def get_address_modal() -> View:
             )
         ]
     )
-
     return address_modal

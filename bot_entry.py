@@ -19,13 +19,16 @@ bolt_app = App(token=settings.SLACKBOT_TOKEN, signing_secret=settings.SLACKBOT_S
 bot = TollBot(SQLiteDatabaseAccess('test.db'))
 
 def publish_home_tab(client: WebClient, user_id):
-    logging.info(f"Publishing home tab for User {user_id}")
+
     home_tab = bot.home_tab(user_id)
+
+    logging.info(f"Publishing home tab for User {user_id}")
+
     try:
         client.views_publish(user_id=user_id, view=home_tab)
-    except SlackApiError:
-        logging.error("Could not publish view")
-        logging.debug("View: {home_tab}")
+    except SlackApiError as e:
+        logging.error(f"Could not publish view: {e}")
+        logging.debug(f"View: {home_tab}")
 
 def get_selected_overflow_value(payload):
     """Returns the selected option from an overflow menu"""
@@ -50,6 +53,7 @@ def add_date(ack, client: WebClient, context, body):
     # is as laid out in home.make_home_blocks()
     current_state = body['view']['state']['values']
     input_date = current_state['DateBlock']['DatePicker']['selected_date']
+
     # None means datepicker has been left as default, use today's date
     new_date = date.fromisoformat(input_date) if input_date else date.today()
     user_id = context['user_id']
@@ -109,6 +113,19 @@ def handle_address_modal(ack, view, context, client: WebClient):
     except SlackApiError:
         logging.error("Slack reported an error", exc_info=True)
 
+@bolt_app.action("DeleteRoute")
+def handle_address_modal(ack, context, client: WebClient):
+    ack()
+
+    user_id = context['user_id']
+
+    logging.info(f"Delete Route for User {user_id}")
+
+    bot.handle_delete_route(user_id)
+    try:
+        publish_home_tab(client, user_id)
+    except SlackApiError:
+        logging.error("Slack reported an error", exc_info=True)
 
 ###########################
 handler = SlackRequestHandler(bolt_app)

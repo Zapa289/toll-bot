@@ -1,4 +1,4 @@
-from settings import GOOGLE_MAPS_API_KEY, base_logger
+from settings import GOOGLE_MAPS_API_KEY, base_logger, IMAGE_SIZE
 from offices import get_office
 from googlemaps import Client
 from googlemaps.maps import StaticMapMarker
@@ -46,7 +46,7 @@ class Mapper:
 
         # Generate static map from polyline
         try:
-            datastream = self.client.static_map(size=[500,400], path="enc:" + route_polyline, markers=markers)
+            datastream = self.client.static_map(size=IMAGE_SIZE, path="enc:" + route_polyline, markers=markers)
         except ValueError:
             logger.error("Failed to get static map", exc_info=True)
             return None
