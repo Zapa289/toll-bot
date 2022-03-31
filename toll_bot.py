@@ -37,7 +37,9 @@ class TollBot:
             date_list = self.database.get_user_dates(user.id)
             user.dates = convert_dates(date_list)
         except ValueError as error:
-            logger.error('Invalid date seen in database for user "%s": %s', user_id, error)
+            logger.error(
+                'Invalid date seen in database for user "%s": %s', user_id, error
+            )
 
         return user
 
@@ -48,7 +50,9 @@ class TollBot:
         try:
             user.add_date(new_date)
         except ValueError:
-            logger.error('Unable to add date "%s{}" to User %s', new_date.isoformat(), user.id)
+            logger.error(
+                'Unable to add date "%s{}" to User %s', new_date.isoformat(), user.id
+            )
             return user
         # Only modify the database if we are working with a valid date
         self.database.add_date(user.id, new_date.isoformat())
@@ -63,7 +67,9 @@ class TollBot:
             user.delete_date(date_to_remove)
         except ValueError:
             logger.error(
-                'Unable to delete date "%s" from User %s', date_to_remove.isoformat(), user.id
+                'Unable to delete date "%s" from User %s',
+                date_to_remove.isoformat(),
+                user.id,
             )
             return user
 
@@ -71,14 +77,18 @@ class TollBot:
         self.database.delete_date(user.id, date_to_remove.isoformat())
         return user
 
-    def handle_address_update(self, user_id: str, starting_address: str, campus_selection: str):
+    def handle_address_update(
+        self, user_id: str, starting_address: str, campus_selection: str
+    ):
         """Take a start and end address and then create a static map from Google Maps.
         Static map will be downloaded and saved to the image cache."""
         try:
             directions = self.mapper.get_route(starting_address, campus_selection)
         except ValueError:
             logger.error("Could not get directions")
-            logger.debug(f"Starting Address: {starting_address}, Campus: {campus_selection}")
+            logger.debug(
+                f"Starting Address: {starting_address}, Campus: {campus_selection}"
+            )
             return
 
         # toll_coords = None

@@ -79,7 +79,9 @@ def get_dates(user: User) -> list[Block]:
     if not date_blocks:
         logger.info("No tracked dates, creating context block")
         date_blocks = [
-            ContextBlock(elements=[PlainTextObject(text="You do not have any tracked dates")])
+            ContextBlock(
+                elements=[PlainTextObject(text="You do not have any tracked dates")]
+            )
         ]
 
     return date_blocks
@@ -133,50 +135,46 @@ def get_map_blocks(user: User) -> list[Block]:
                 ],
             )
         )
-    else:
-        logger.info("Found cached map for user")
+        return map_blocks
 
-        if not settings.IMAGE_HOST:
-            logger.warning("No image host configured. Images cannot be displayed")
-            return [
-                ContextBlock(
-                    elements=[
-                        PlainTextObject(
-                            text="Route information unavailable, no image host configured"
-                        )
-                    ]
-                )
-            ]
+    logger.info("Found cached map for user")
 
-        logger.info("Create image block")
-        url = settings.IMAGE_HOST + image_name
-        logger.debug(f"Image URL: {url}")
-        map_blocks.append(HeaderBlock(text="Your route to work"))
-        map_blocks.append(ImageBlock(image_url=url, alt_text="Your route to work"))
-        map_blocks.append(
-            ActionsBlock(
-                block_id="MapBlock",
+    if not settings.IMAGE_HOST:
+        logger.warning("No image host configured. Images cannot be displayed")
+        return [
+            ContextBlock(
                 elements=[
-                    ButtonElement(
-                        text="Change Route",
-                        action_id="EnterAddress",
-                        value="EnterAddress",
-                    ),
-                    ButtonElement(
-                        text="Delete Route",
-                        action_id="DeleteRoute",
-                        value="DeleteRoute",
-                        style="danger",
-                        confirm=ConfirmObject(
-                            title="Confirm Delete Route",
-                            text="Are you sure you want to delete your route? This cannot be undone.",
-                            deny="Cancel",
-                            style="danger",
-                        ),
-                    ),
-                ],
+                    PlainTextObject(
+                        text="Route information unavailable, no image host configured"
+                    )
+                ]
             )
+        ]
+
+    logger.info("Create image block")
+    url = settings.IMAGE_HOST + image_name
+    logger.debug(f"Image URL: {url}")
+    map_blocks.append(HeaderBlock(text="Your route to work"))
+    map_blocks.append(ImageBlock(image_url=url, alt_text="Your route to work"))
+    map_blocks.append(
+        ActionsBlock(
+            block_id="MapBlock",
+            elements=[
+                ButtonElement(
+                    text="Delete Route",
+                    action_id="DeleteRoute",
+                    value="DeleteRoute",
+                    style="danger",
+                    confirm=ConfirmObject(
+                        title="Confirm Delete Route",
+                        text="Are you sure you want to delete your route? This cannot be undone.",
+                        deny="Cancel",
+                        style="danger",
+                    ),
+                ),
+            ],
         )
+    )
 
     return map_blocks
 

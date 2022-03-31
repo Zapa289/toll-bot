@@ -82,7 +82,9 @@ def get_file_name(user_id) -> str:
 def create_file_name(user_id: str, route: dict) -> str:
     """Create a file name based on the user_id and the start/end addresses of the route.
     All file names will be of the form {hash of user_id}_{hash of addresses}.{filetype}"""
-    file_name = "".join([hash_user_id(user_id=user_id), "_", hash_route(route), IMAGE_FILE_TYPE])
+    file_name = "".join(
+        [hash_user_id(user_id=user_id), "_", hash_route(route), IMAGE_FILE_TYPE]
+    )
     return file_name
 
 
@@ -101,6 +103,7 @@ def write_to_image_cache(file_name: str, datastream):
 def delete_image_from_cache(file_name: str):
     """Delete a map image from the image cache."""
     file_path = Path(IMAGE_CACHE_PATH / file_name)
+    logger.info("Deleting file %s", file_name)
     try:
         os.remove(file_path)
     except FileNotFoundError:
