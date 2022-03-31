@@ -79,9 +79,7 @@ def get_dates(user: User) -> list[Block]:
     if not date_blocks:
         logger.info("No tracked dates, creating context block")
         date_blocks = [
-            ContextBlock(
-                elements=[PlainTextObject(text="You do not have any tracked dates")]
-            )
+            ContextBlock(elements=[PlainTextObject(text="You do not have any tracked dates")])
         ]
 
     return date_blocks
@@ -144,9 +142,7 @@ def get_map_blocks(user: User) -> list[Block]:
         return [
             ContextBlock(
                 elements=[
-                    PlainTextObject(
-                        text="Route information unavailable, no image host configured"
-                    )
+                    PlainTextObject(text="Route information unavailable, no image host configured")
                 ]
             )
         ]

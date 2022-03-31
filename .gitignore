@@ -132,6 +132,3 @@ dmypy.json
 /cache
 *test*.*
 ngrok.exe
-
-#VS CODE
-.vscode/

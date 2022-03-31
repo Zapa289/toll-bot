@@ -15,9 +15,7 @@ from toll_bot import TollBot
 
 app = Flask(__name__)
 
-bolt_app = App(
-    token=settings.SLACKBOT_TOKEN, signing_secret=settings.SLACKBOT_SIGNING_SECRET
-)
+bolt_app = App(token=settings.SLACKBOT_TOKEN, signing_secret=settings.SLACKBOT_SIGNING_SECRET)
 
 bot = TollBot(SQLiteDatabaseAccess("test.db"))
 
@@ -121,9 +119,7 @@ def handle_address_modal(ack, view, context, client: WebClient):
     modal_state = view["state"]["values"]
 
     starting_address = modal_state["AddressInput"]["AddressInput"]["value"]
-    campus_selection = modal_state["CampusInput"]["CampusSelection"]["selected_option"][
-        "value"
-    ]
+    campus_selection = modal_state["CampusInput"]["CampusSelection"]["selected_option"]["value"]
 
     user_id = context["user_id"]
 
