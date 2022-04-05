@@ -2,6 +2,7 @@ from datetime import date
 
 import home
 import settings
+import tolls
 from db_manager import DatabaseAccess
 from file_util import delete_user_map, save_user_route_map
 from google import Mapper
@@ -37,9 +38,7 @@ class TollBot:
             date_list = self.database.get_user_dates(user.id)
             user.dates = convert_dates(date_list)
         except ValueError as error:
-            logger.error(
-                'Invalid date seen in database for user "%s": %s', user_id, error
-            )
+            logger.error('Invalid date seen in database for user "%s": %s', user_id, error)
 
         return user
 
@@ -50,9 +49,7 @@ class TollBot:
         try:
             user.add_date(new_date)
         except ValueError:
-            logger.error(
-                'Unable to add date "%s{}" to User %s', new_date.isoformat(), user.id
-            )
+            logger.error('Unable to add date "%s{}" to User %s', new_date.isoformat(), user.id)
             return user
         # Only modify the database if we are working with a valid date
         self.database.add_date(user.id, new_date.isoformat())
@@ -77,22 +74,19 @@ class TollBot:
         self.database.delete_date(user.id, date_to_remove.isoformat())
         return user
 
-    def handle_address_update(
-        self, user_id: str, starting_address: str, campus_selection: str
-    ):
+    def handle_address_update(self, user_id: str, starting_address: str, campus_selection: str):
         """Take a start and end address and then create a static map from Google Maps.
         Static map will be downloaded and saved to the image cache."""
         try:
             directions = self.mapper.get_route(starting_address, campus_selection)
         except ValueError:
             logger.error("Could not get directions")
-            logger.debug(
-                f"Starting Address: {starting_address}, Campus: {campus_selection}"
-            )
+            logger.debug(f"Starting Address: {starting_address}, Campus: {campus_selection}")
             return
 
-        # toll_coords = None
-        datastream = self.mapper.get_static_map(directions=directions, toll_coords=None)
+        toll_coords = tolls.get_toll_markers(directions.polyline)
+
+        datastream = self.mapper.get_static_map(directions=directions, toll_coords=toll_coords)
         if not datastream:
             logger.error("Could not get static map")
             return

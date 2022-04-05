@@ -60,9 +60,7 @@ class Mapper:
             logger.error(f"Office {office_str} not found")
             raise ValueError("Invalid office input")
 
-        return Directions(
-            self.client.directions(location, f"place_id:{office.place_id}")
-        )
+        return Directions(self.client.directions(location, f"place_id:{office.place_id}"))
 
     def get_static_map(self, directions: Directions, toll_coords: list = None):
         """Get a static map from google. Returns a generator to get picture contents"""
@@ -70,8 +68,9 @@ class Mapper:
 
         markers = []
         markers.append(StaticMapMarker(directions.markers))
+
         if toll_coords:
-            markers.append(StaticMapMarker(toll_coords))
+            markers.append(StaticMapMarker(toll_coords, size="small", color="0xFFC300"))
 
         logger.debug(f"Polyline: {directions.polyline}")
 

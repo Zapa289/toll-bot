@@ -148,8 +148,10 @@ def get_map_blocks(user: User) -> list[Block]:
         ]
 
     logger.info("Create image block")
+
     url = settings.IMAGE_HOST + image_name
     logger.debug(f"Image URL: {url}")
+
     map_blocks.append(HeaderBlock(text="Your route to work"))
     map_blocks.append(ImageBlock(image_url=url, alt_text="Your route to work"))
     map_blocks.append(

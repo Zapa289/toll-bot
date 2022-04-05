@@ -11,6 +11,8 @@ load_dotenv(dotenv_path=env_path)
 SLACKBOT_TOKEN = os.getenv("SLACKBOT_TOKEN")
 SLACKBOT_SIGNING_SECRET = os.getenv("SLACKBOT_SIGNING_SECRET")
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+TOLL_GURU_API_KEY = os.getenv("TOLL_GURU_API_KEY")
+
 HOST_IP = os.getenv("HOST_IP")
 # ex. "C:/Apache24/htdocs/image-cache"
 IMAGE_CACHE_PATH = Path(os.getenv("IMAGE_CACHE_PATH"))

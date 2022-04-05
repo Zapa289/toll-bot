@@ -58,7 +58,7 @@ def prune_multiple_images(files: list[str]) -> str:
 
 
 def get_file_name(user_id) -> str:
-    """Find the image that matches a user_id. If multiple files are found then the older
+    """Search the image chache to find the image matching a user_id. If multiple files are found then the older
     images will be deleted."""
     file_name = None
     file_name_prefix = hash_user_id(user_id)
@@ -82,9 +82,7 @@ def get_file_name(user_id) -> str:
 def create_file_name(user_id: str, route: dict) -> str:
     """Create a file name based on the user_id and the start/end addresses of the route.
     All file names will be of the form {hash of user_id}_{hash of addresses}.{filetype}"""
-    file_name = "".join(
-        [hash_user_id(user_id=user_id), "_", hash_route(route), IMAGE_FILE_TYPE]
-    )
+    file_name = "".join([hash_user_id(user_id=user_id), "_", hash_route(route), IMAGE_FILE_TYPE])
     return file_name
 
 
